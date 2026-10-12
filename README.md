@@ -60,7 +60,7 @@ Definition: <code>weight(user, hashtag)</code> = number of posts by that user co
 This application is designed for **local use only**.
 
 Please ensure:
-1. Port `8080` is not exposed publicly (restrict firewall / router). 
+1. The app is only reachable from the computer it runs on (the port is published on `127.0.0.1`). Do not change that without HTTPS and a firewall.
 2. Every secret in `.env.docker` is unique and random (it is git‑ignored; never commit it).
 3. If the site is ever served over HTTPS, set `SECURE_COOKIES=1` in `.env.docker`.
 
@@ -69,42 +69,53 @@ What the application enforces:
 - After 5 failed logins (API or admin) a username is locked for 15 minutes from that IP address (`LOGIN_FAILURE_LIMIT`, `LOGIN_LOCKOUT_MINUTES`). Unlock earlier with `python manage.py axes_reset_username <username>`.
 - Uploaded images are only served to their owner (and to staff); nginx sends the file once Django has authorized the request.
 - Each user only sees and changes their own projects and data.
-- The app must be opened on the same host as its API (e.g. `http://127.0.0.1:8080`), otherwise the browser does not send the login cookies.
+- The app calls its API on the same address it is opened on, so the login cookies never leave that address.
 
-## Prerequisites
+## Getting Started (no technical knowledge needed)
 
-Ensure you have:
-- Docker & Docker Compose (v2+)
-- (Optional) Python 3.11+ if running backend outside containers
+You only need **Docker Desktop**: download it from <https://www.docker.com/products/docker-desktop/>, install it and open it once.
 
-## Quick Start
+1. Download DataGatherer: on GitHub press **Code → Download ZIP** and unzip it (or `git clone` it).
+2. Start it:
+   - **Mac**: double-click `start.command` (the first time: right-click → *Open*, then confirm).
+   - **Windows**: double-click `start.bat`.
+   - **Linux**: run `./start.sh` in a terminal.
+3. Wait. The first start downloads DataGatherer (about 800 MB: a few minutes, depending on your connection); later starts take seconds.
+   When it is ready, the app opens in your browser and the window shows the **administrator user and password**.
+   Keep them: they are also saved in the file `.env.docker`.
 
-```bash
-git clone https://github.com/ViDem02/DataGatherer.git
-cd DataGatherer
-cp .env.docker.example .env.docker   # then replace every "change-me" value
-(cd frontend && npm ci && npm run build)   # nginx serves frontend/build
-docker compose build
-docker compose up
-```
+To stop DataGatherer double-click `stop.command` (Mac) or `stop.bat` (Windows), or run `./stop.sh`. Your projects and images are kept, also when the computer restarts.
 
-Then open: `http://127.0.0.1:8080`
+To give other people access, open the admin page shown at the end of the start (e.g. `http://127.0.0.1:8080/api/a/admin/`), log in as administrator and add users.
 
-## Accessing the Admin
+**If something goes wrong**, the start window says what to do: Docker not installed, Docker not running, port in use. If it says DataGatherer did not start, send the messages shown above it to whoever maintains the app.
 
-URL: `http://127.0.0.1:8080/api/a/admin/`
+> Never delete the Docker *volumes* of DataGatherer (for example with `docker compose down -v`): they hold the database and the uploaded images.
 
-The superuser is provisioned on first run from `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` in `.env.docker`.
-Index computation is restricted to staff users. For backups, use `python manage.py dumpdata` (or `pg_dump`) on the server.
+### What the start script does
+- Checks that Docker is installed and running.
+- On the first start, creates `.env.docker` from `.env.docker.example` with new random passwords, and picks a free port (8080, or the next free one) saved as `APP_PORT`.
+- Downloads the ready-made images published by CI on the GitHub Container Registry (`ghcr.io/videm02/datagatherer-backend` and `-nginx`, for Intel/AMD and ARM computers) and starts them. If the download is not possible, it builds them on the computer instead (10 to 20 minutes). Each start also downloads updates, if any.
+- Waits until the app answers, then opens it in the browser.
+
+## For Developers
+
+- `start.sh` runs the published images, not your local code. To run your changes: `docker compose --env-file .env.docker up -d --build`.
+- Images are published by `.github/workflows/images.yml` on every push to `main` (tag `latest`) and every git tag (tag = git tag name); every image also gets a `sha-<commit>` tag. Set `DATAGATHERER_VERSION` to run a specific one.
+- Backend from the source folder (code changes without rebuilding):
+  `docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.dev.yml up`
+- Frontend: `cd frontend && npm ci && npm start` serves the app on `http://localhost:3000` and forwards `/a/`, `/b/` and `/media/` to the backend on `127.0.0.1:8000`.
+- The superuser is created on the first start from `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` in `.env.docker`.
+- Index computation is restricted to staff users. For backups, use `pg_dump` on the database container.
 
 ## Testing
 
 - Backend: Unit tests cover critical data operations & matrix accuracy.
 - Frontend: Currently not automatically tested (roadmap item).
 
-Run backend tests (inside the backend container or a Python venv):
+Run backend tests in the backend container (they no longer run at every start):
 ```bash
-python manage.py test
+docker compose --env-file .env.docker run --rm django python manage.py test
 ```
 
 Outside Docker, set `DEBUG=1` (development only) or provide a `SECRET_KEY`: the backend refuses to start without a secret key when debug mode is off.

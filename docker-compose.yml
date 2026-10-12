@@ -1,7 +1,8 @@
-version: "3.8"
-
+# The images are downloaded from the GitHub Container Registry, where CI publishes them
+# (.github/workflows/images.yml). If they cannot be downloaded, they are built from this folder.
 services:
     django:
+        image: ${DATAGATHERER_IMAGES:-ghcr.io/videm02}/datagatherer-backend:${DATAGATHERER_VERSION:-latest}
         build: ./backend/data_gatherer
         container_name: data-gatherer-server
         # gthread workers keep answering heartbeats while long requests (matrix export, OCR) run
@@ -9,11 +10,12 @@ services:
         env_file:
             - .env.docker
         volumes:
-            - ./backend/data_gatherer/:/srv/app
             - prod_static:/srv/app/static
             - prod_media:/srv/app/media
         depends_on:
-            - db
+            db:
+                condition: service_healthy
+        restart: unless-stopped
     db:
         image: postgres:16.1-alpine
         container_name: prod-swang-db
@@ -21,20 +23,28 @@ services:
             - .env.docker
         volumes:
             - prod_postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+        restart: unless-stopped
     nginx:
-        build: ./nginx
+        image: ${DATAGATHERER_IMAGES:-ghcr.io/videm02}/datagatherer-nginx:${DATAGATHERER_VERSION:-latest}
+        # Built from the repository root: the image also builds the React app, so no Node.js is needed
+        build:
+            context: .
+            dockerfile: nginx/Dockerfile
         container_name: prod-nginx
         ports:
-            - 8080:80
-        restart: always
+            # Only reachable from this computer. APP_PORT is chosen by start.sh / start.ps1
+            - 127.0.0.1:${APP_PORT:-8080}:80
+        restart: unless-stopped
         volumes:
             - prod_static:/srv/app/static
             - prod_media:/srv/app/media
-            # The React app, built with `npm run build` in frontend/
-            - ./frontend/build:/srv/frontend:ro
         depends_on:
             - django
-            - db
 
 volumes:
     prod_postgres_data:

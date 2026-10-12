@@ -11,14 +11,17 @@ then
     echo "PostgreSQL started"
 fi
 
-# Uncomment below to flush db e.g. after running tests
-# Just make sure you really mean it
-# python manage.py flush --no-input
-
+# Tests are not run here: a failing test must not stop the application.
+# Run them with: docker compose --env-file .env.docker run --rm django python manage.py test
 
 python manage.py migrate || exit
-python manage.py test --noinput || exit
 python manage.py collectstatic --noinput
-python manage.py createsuperuser --noinput
+
+# Creates the administrator from DJANGO_SUPERUSER_* on the first start only
+python manage.py shell -c "
+import sys
+from django.contrib.auth import get_user_model
+sys.exit(0 if get_user_model().objects.filter(is_superuser=True).exists() else 1)
+" || python manage.py createsuperuser --noinput
 
 exec "$@"

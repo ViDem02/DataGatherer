@@ -1,0 +1,9 @@
+# Build context of the nginx image (repository root): it only needs nginx/ and frontend/
+.git
+.idea
+docs
+backend
+.env.docker*
+frontend/node_modules
+frontend/build
+**/.DS_Store

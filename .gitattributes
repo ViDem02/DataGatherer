@@ -1,0 +1,8 @@
+# Scripts and files read inside Linux containers must keep Unix line endings, also on Windows checkouts
+*.sh text eol=lf
+*.command text eol=lf
+.env.docker.example text eol=lf
+nginx/* text eol=lf
+# Windows scripts keep Windows line endings
+*.bat text eol=crlf
+*.ps1 text eol=crlf

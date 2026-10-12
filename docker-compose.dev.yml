@@ -1,0 +1,8 @@
+# Development only: runs the backend from the source folder instead of the code copied into the image.
+# docker compose --env-file .env.docker -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+    django:
+        volumes:
+            - ./backend/data_gatherer/:/srv/app
+            - prod_static:/srv/app/static
+            - prod_media:/srv/app/media

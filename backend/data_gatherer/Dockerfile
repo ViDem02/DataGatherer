@@ -9,6 +9,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV ANNOY_COMPILER_ARGS=-DNO_MANUAL_VECTORIZATION
 
+# Package mirrors time out now and then: retry downloads instead of failing the build
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries
+
 # install dependencies
 RUN pip install --upgrade pip
 COPY ./requirements.txt .

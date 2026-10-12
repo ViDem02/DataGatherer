@@ -4,3 +4,16 @@
 /frontend/.env
 /backend/data_gatherer/.env
 /backend/data_gatherer/db.sqlite3
+# Secrets: copy .env.docker.example to .env.docker and fill it in
+.env.docker
+/backend/data_gatherer/requests/http-client.private.env.json
+
+# Database dumps and indexes built from collected (personal) data
+/backend/data_gatherer/load.json
+/backend/data_gatherer/dump.json
+/backend/data_gatherer/annoy_config.json
+/backend/data_gatherer/usernames_index.ann
+
+__pycache__/
+*.pyc
+/backend/data_gatherer/static/

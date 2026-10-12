@@ -2,7 +2,7 @@ import Gallery from "../../components/gallery/Gallery";
 import {useParams, useSearchParams} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
 import fetchProject from "../../queries/fetchProjectData";
-import {getBackupFile, getMatrixUrl} from "../../api_router/fx_api";
+import {downloadMatrix} from "../../queries/downloadFiles";
 import TitleTopButtonsContentLayout from "../../layouts/title_topbuttons_content_layout/TitleTopButtonsContentLayout";
 import {gather_route} from "../data_gatering_page/DataGatheringPage";
 import {useState} from "react";
@@ -78,11 +78,7 @@ const ProjectOverviewPage = () => {
 
 
                 <div className={"m-2"}>
-                    <a href={getMatrixUrl(prjId)} className="btn btn-primary mx-1">Scarica matrice formata</a>
-                </div>,
-
-                <div className={"m-2"}>
-                    <a href={getBackupFile()} className="btn btn-primary mx-1">Scarica file di backup</a>
+                    <a onClick={() => downloadMatrix(prjId)} className="btn btn-primary mx-1">Scarica matrice formata</a>
                 </div>,
 
                 <div className={"m-2"}>

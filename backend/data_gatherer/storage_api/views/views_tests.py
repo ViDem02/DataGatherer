@@ -397,18 +397,6 @@ class ProjectDefaultCropViewSetTestCase(TestCase):
     def test_creation_without_pre_existing_entities_proj_default_crop(self):
         c = Client()
 
-        User.objects.create_user(
-            username="aaa",
-            email="aa@aait",
-            password="aa"
-        )
-
-        auth_response = c.post(pre_path + '/a/token/obtain/', {
-            'username': 'aaa',
-            'password': 'aa',
-        })
-        token = auth_response.json()["access"]
-
         response = c.post(pre_path + '/b/storage_api/prj_default_crop/', {
             'project': self.project.pk,
             'topPercent': 0,
@@ -417,7 +405,7 @@ class ProjectDefaultCropViewSetTestCase(TestCase):
             'widthPercent': 9.9999999,
             'fieldName': 'Bub',
         }, headers={
-            'Authorization': 'Bearer %s' % token
+            'Authorization': 'Bearer %s' % self.token
         })
 
         print(response)

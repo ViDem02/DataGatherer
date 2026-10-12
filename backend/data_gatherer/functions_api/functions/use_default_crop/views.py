@@ -19,7 +19,7 @@ class UseDefaultCropView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        ser = Serializer(data=request.data)
+        ser = self.get_serializer(data=request.data)
         ser.is_valid(raise_exception=True)
 
         fieldName = ser.validated_data['fieldName']

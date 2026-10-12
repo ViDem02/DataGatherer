@@ -14,8 +14,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-import os
-
 from data_gatherer.admin_sites import global_admin_site
 from functions_api import local_urls as fx_urls
 from storage_api import local_urls as storage_urls
@@ -30,7 +28,7 @@ from rest_framework_simplejwt.views import (
 from django.contrib.auth.views import LogoutView
 
 
-pre_path = os.environ.get("PRE_PATH", default="")
+pre_path = settings.PRE_PATH
 
 
 token_urlpatterns = [
@@ -40,7 +38,6 @@ token_urlpatterns = [
 ]
 
 public_paths = [
-    path('fx_api/', include(fx_urls)), # TODO to be changed!!!!!!
     path('admin/', global_admin_site.urls),
     path('token/', include(token_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),

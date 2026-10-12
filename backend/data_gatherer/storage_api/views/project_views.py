@@ -28,7 +28,8 @@ class ProjectDefaultCropViewSet(OwnedInstancesCompleteModelViewSet):
 
         ProjectDefaultCrop.objects.filter(
             project=serializer.data['project'],
-            fieldName=serializer.data['fieldName']
+            fieldName=serializer.data['fieldName'],
+            project__author=request.user
         ).delete()
 
         return super().create(request, *args, **kwargs)

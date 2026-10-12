@@ -3,9 +3,10 @@ from rest_framework import serializers
 from storage_api.models.image_models import Image
 from storage_api.models.data_models import Hashtag, IGUser, UserHashtagUse
 from storage_api.models.project_models import *
+from storage_api.serializers.common_serializers import OwnedModelSerializer, PERCENT_FIELD_KWARGS
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(OwnedModelSerializer):
     are_all_images_analyzed = serializers.SerializerMethodField()
     next_image_to_analyze = serializers.SerializerMethodField()
     nr_hashtags = serializers.SerializerMethodField()
@@ -32,10 +33,16 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ['author']
         
 
-class ProjectDefaultCropSerializer(serializers.ModelSerializer):
+class ProjectDefaultCropSerializer(OwnedModelSerializer):
 
     class Meta:
         model = ProjectDefaultCrop
         fields = '__all__'
         read_only_fields = ['author']
+        extra_kwargs = {
+            'topPercent': PERCENT_FIELD_KWARGS,
+            'leftPercent': PERCENT_FIELD_KWARGS,
+            'heightPercent': PERCENT_FIELD_KWARGS,
+            'widthPercent': PERCENT_FIELD_KWARGS,
+        }
 

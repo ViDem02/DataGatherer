@@ -1,8 +1,10 @@
 ### Obtain Token
+# Credentials come from http-client.private.env.json (git-ignored), e.g.
+# {"dev": {"username": "...", "password": "..."}}
 POST http://localhost:8000/a/token/obtain/
 Content-Type: application/x-www-form-urlencoded
 
-username=sofia&password=Sofia@plux8500
+username={{username}}&password={{password}}
 
 > {%
     client.global.set("auth_token", response.body.access);

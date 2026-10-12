@@ -15,7 +15,10 @@ from django.http import HttpResponse, StreamingHttpResponse
 
 class StreamCreateMatrixViewSet(generics.RetrieveAPIView):
     queryset = Project.objects.all()
-    permission_classes = [AllowAny] # TODO to be changed
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Project.objects.filter(author=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

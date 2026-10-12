@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bookworm
 
 # set work directory
 WORKDIR /srv/app
@@ -15,7 +15,7 @@ COPY ./requirements.txt .
 
 RUN apt-get update && apt-get install -y \
   gcc \
-  netcat \
+  netcat-openbsd \
   libpq-dev \
   postgresql-client \
   g++ \

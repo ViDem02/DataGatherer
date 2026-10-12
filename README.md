@@ -61,8 +61,8 @@ This application is designed for **local use only**.
 
 Please ensure:
 1. Port `8080` is not exposed publicly (restrict firewall / router). 
-2. Default admin credentials are changed if ever network‑accessible.
-3. Uploaded media does not contain sensitive PII unless you harden access.
+2. Every secret in `.env.docker` is unique and random (it is git‑ignored; never commit it).
+3. Uploaded media does not contain sensitive PII unless you harden access: media files are served without authentication to anyone who knows their URL.
 
 > Important: No built‑in authentication hardening or role‑based access beyond Django’s defaults. You are responsible for securing deployments.
 
@@ -77,6 +77,7 @@ Ensure you have:
 ```bash
 git clone https://github.com/ViDem02/DataGatherer.git
 cd DataGatherer
+cp .env.docker.example .env.docker   # then replace every "change-me" value
 docker compose build
 docker compose up
 ```
@@ -85,16 +86,10 @@ Then open: `http://127.0.0.1:8080`
 
 ## Accessing the Admin
 
-URL: `http://127.0.0.1:8080/api/admin`
+URL: `http://127.0.0.1:8080/api/a/admin/`
 
-Default credentials (auto‑provisioned on first run):
-
-```
-username: admin
-password: admin
-```
-
-> Change these immediately for any non‑isolated environment.
+The superuser is provisioned on first run from `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` in `.env.docker`.
+Index computation is restricted to staff users. For backups, use `python manage.py dumpdata` (or `pg_dump`) on the server.
 
 ## Testing
 
@@ -105,6 +100,8 @@ Run backend tests (inside the backend container or a Python venv):
 ```bash
 python manage.py test
 ```
+
+Outside Docker, set `DEBUG=1` (development only) or provide a `SECRET_KEY`: the backend refuses to start without a secret key when debug mode is off.
 
 ## Project Structure (Selected)
 

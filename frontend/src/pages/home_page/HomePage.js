@@ -82,8 +82,7 @@ const HomePage = () => {
 
                     <div className={"m-2"}>
                         <a href={adminUrl()} className="btn btn-primary mx-1">
-                            Apri pannello di controllo entità (username: admin,
-                            password: admin)
+                            Apri pannello di controllo entità
                         </a>
                     </div>
                 ]}

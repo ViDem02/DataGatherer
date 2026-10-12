@@ -23,7 +23,7 @@ class ImgCropViewSet(OwnedInstancesCompleteModelViewSet):
         img_id = request.data['image']
         field_name = request.data['fieldName']
 
-        ImgCrop.objects.filter(image_id=img_id).filter(fieldName=field_name).delete()
+        ImgCrop.objects.filter(image_id=img_id, image__author=request.user).filter(fieldName=field_name).delete()
 
         return super().create(request, *args, **kwargs)
 
@@ -40,7 +40,8 @@ class ImgDataViewSet(OwnedInstancesCompleteModelViewSet):
 
         ImgData.objects.filter(
             fieldName=serializer.data['fieldName'],
-            image_id=int(serializer.data['image'])
+            image_id=int(serializer.data['image']),
+            image__author=request.user
         ).delete()
 
         return super().create(request, *args, **kwargs)

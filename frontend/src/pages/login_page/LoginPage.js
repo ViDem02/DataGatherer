@@ -21,7 +21,8 @@ const LoginPage = () => {
             cookies.set('username', username)
 
             const current = cookies.get('current')
-            if (current !== undefined){
+            const isLocalPath = typeof current === 'string' && current.startsWith('/') && !current.startsWith('//')
+            if (isLocalPath){
                 window.location.assign(current)
                 return
             }

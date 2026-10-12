@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from datetime import timedelta
@@ -19,11 +21,16 @@ from datetime import timedelta
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", default="4934h3iwrwogi543g@4t938euh3")
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get("DEBUG", default=1))
+DEBUG = int(os.environ.get("DEBUG", default=0))
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# It also signs the JWTs, so anyone who knows it can log in as any user.
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("The SECRET_KEY environment variable must be set when DEBUG is off.")
+    SECRET_KEY = "django-insecure-local-development-only"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", default='127.0.0.1 localhost').split(" ")
 
@@ -177,13 +184,13 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATIC_ROOT = "../static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = os.environ.get("STATIC_URL", default='/static/')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = os.environ.get("MEDIA_URL", default='/media/')
 
-DATA_UPLOAD_MAX_NUMBER_FILES = None
+DATA_UPLOAD_MAX_NUMBER_FILES = int(os.environ.get("DATA_UPLOAD_MAX_NUMBER_FILES", default=1000))
 
 TEST_MEDIA_ROOT = os.path.join(BASE_DIR, 'test_media')
 
@@ -228,4 +235,6 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-PUBLIC_PATH_STARTS_WITH = 'a'
+PRE_PATH = os.environ.get("PRE_PATH", default="")
+
+PUBLIC_PATH_STARTS_WITH = PRE_PATH + 'a/'

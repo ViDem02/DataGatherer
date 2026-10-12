@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.db.transaction import atomic
 from tqdm import tqdm
 from django.core.files import File as DjangoFile
+from django.utils.text import get_valid_filename
 
 
 @atomic
@@ -222,7 +223,9 @@ def work_job(job, wait=False):
 def calculate_whole_file(job):
     from job_api.models import Task, Job
     tasks = Task.objects.filter(Q(job=job)).order_by('progressiveID')
-    with open(f"./jobs_elaborations/job_{job.pk}/whole_job_{job.title}.csv", "w") as write_file:
+    # The title is free text: it must not be able to point outside the job folder
+    whole_file_path = f"./jobs_elaborations/job_{job.pk}/whole_job_{get_valid_filename(job.title)}.csv"
+    with open(whole_file_path, "w") as write_file:
         for task in tasks:
             task: Task = task
             with open(f"./jobs_elaborations/job_{job.pk}/{job.pk}_{task.progressiveID}.csv", "r") as read_file:
@@ -230,6 +233,6 @@ def calculate_whole_file(job):
                     next(read_file)
                 for line in read_file:
                     write_file.write(line)
-    with open(f"./jobs_elaborations/job_{job.pk}/whole_job_{job.title}.csv", "r") as read_file:
+    with open(whole_file_path, "r") as read_file:
         job.file = DjangoFile(read_file)
         job.save()

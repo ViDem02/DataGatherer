@@ -31,8 +31,11 @@ class Authentication(TestCase):
             'username': self.anne.username,
             'password': 'giacomogiacomo'
         })
-        assert 'access' in auth_response.json()
-        assert 'refresh' in auth_response.json()
+        # Tokens are only handed out as HttpOnly cookies, never in the body
+        assert 'access' in auth_response.cookies
+        assert 'refresh' in auth_response.cookies
+        assert auth_response.cookies['access']['httponly']
+        assert 'access' not in auth_response.json()
         assert auth_response.status_code == 200
 
     def test_refresh_mechanism(self):
@@ -41,9 +44,8 @@ class Authentication(TestCase):
             'username': self.anne.username,
             'password': 'giacomogiacomo'
         })
-        refresh_response = c.post(pre_path + '/a/token/refresh/', {
-            'refresh': auth_response.json()["refresh"]
-        })
+        # The client sends back the refresh cookie it got at login
+        refresh_response = c.post(pre_path + '/a/token/refresh/')
         assert refresh_response.status_code == 200
 
 
@@ -67,7 +69,7 @@ class OwnedInstancesCompleteModelViewSet(TestCase):
             'username': self.anne.username,
             'password': "giacomogiacomo"
         })
-        token = auth_response.json()["access"]
+        token = auth_response.cookies["access"].value
 
         response = c.post(pre_path + '/b/storage_api/projects/', {
             'name': 'prj_a'
@@ -87,13 +89,13 @@ class OwnedInstancesCompleteModelViewSet(TestCase):
             'username': self.anne.username,
             'password': "giacomogiacomo"
         })
-        token_anne = auth_response.json()["access"]
+        token_anne = auth_response.cookies["access"].value
 
         auth_response = c.post(pre_path + '/a/token/obtain/', {
             'username': self.bob.username,
             'password': "giacomogiacomo"
         })
-        token_bob = auth_response.json()["access"]
+        token_bob = auth_response.cookies["access"].value
 
         c.post(pre_path + '/b/storage_api/projects/', {
             'name': 'prj_a'
@@ -131,13 +133,13 @@ class OwnedInstancesCompleteModelViewSet(TestCase):
             'username': self.anne.username,
             'password': "giacomogiacomo"
         })
-        token_anne = auth_response.json()["access"]
+        token_anne = auth_response.cookies["access"].value
 
         auth_response = c.post(pre_path + '/a/token/obtain/', {
             'username': self.bob.username,
             'password': "giacomogiacomo"
         })
-        token_bob = auth_response.json()["access"]
+        token_bob = auth_response.cookies["access"].value
 
         c.post(pre_path + '/b/storage_api/projects/', {
             'name': 'prj_a'
@@ -203,7 +205,7 @@ class ImgCropViewSetTestCase(TestCase):
             'username': 'test',
             'password': 'test',
         })
-        self.token = auth_response.json()["access"]
+        self.token = auth_response.cookies["access"].value
         self.project = Project.objects.create(
             name='Test',
             author=authenticate(
@@ -293,7 +295,7 @@ class ImgDataViewSetTestCase(TestCase):
             'username': 'test',
             'password': 'test',
         })
-        self.token = auth_response.json()["access"]
+        self.token = auth_response.cookies["access"].value
         self.project = Project.objects.create(
             name='Test',
             author=authenticate(
@@ -385,7 +387,7 @@ class ProjectDefaultCropViewSetTestCase(TestCase):
             'username': 'test',
             'password': 'test',
         })
-        self.token = auth_response.json()["access"]
+        self.token = auth_response.cookies["access"].value
         self.project = Project.objects.create(
             name='Test',
             author=authenticate(

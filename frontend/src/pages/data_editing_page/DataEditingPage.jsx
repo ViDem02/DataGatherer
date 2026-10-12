@@ -1,7 +1,7 @@
 import SingleImgAnalysisLayout from "../../layouts/single_image_analysis_layout/SingleImgAnalysisLayout";
 import DataAnalysisCard from "../../components/analysis/DataAnalysisCard";
 import {useParams, useSearchParams} from "react-router-dom";
-import {defaultBaseUrl} from "../../global_vars";
+import {mediaUrl} from "../../api_router/fx_api";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import fetchImage from "../../queries/fetchImage";
 import {useRef, useState} from "react";
@@ -83,8 +83,7 @@ const DataEditingPage = () => {
     }
 
 
-    const baseUrl = process.env.REACT_APP_API_URL || defaultBaseUrl
-    const imgUrl = baseUrl + imgData.image_file_url
+    const imgUrl = mediaUrl(imgData.image_file_url)
 
     return (
         <SingleImgAnalysisLayout

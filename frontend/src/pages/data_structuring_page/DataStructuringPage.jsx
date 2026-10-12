@@ -2,7 +2,7 @@ import SingleImgAnalysisLayout from "../../layouts/single_image_analysis_layout/
 import {useParams, useSearchParams} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import fetchImage from "../../queries/fetchImage";
-import {defaultBaseUrl} from "../../global_vars";
+import {mediaUrl} from "../../api_router/fx_api";
 import UsernameAnalysisCard from "../../components/analysis/UsenameAnalysisCard";
 import HashtagAnalysisGallery from "../../components/analysis/HashtagAnalysisGallery";
 import {useCookies} from "react-cookie";
@@ -48,8 +48,7 @@ const DataStructuringPage = () => {
     }
 
 
-    const baseUrl = process.env.REACT_APP_API_URL || defaultBaseUrl
-    const imgUrl = baseUrl + imgData.image_file_url
+    const imgUrl = mediaUrl(imgData.image_file_url)
 
     return (
         <SingleImgAnalysisLayout

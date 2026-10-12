@@ -29,7 +29,7 @@ class UseDefaultCropTestCase(TestCase):
             'username': self.anne.username,
             'password': "giacomogiacomo"
         })
-        self.token = auth_response.json()["access"]
+        self.token = auth_response.cookies["access"].value
 
         with open(settings.TEST_MEDIA_ROOT + '/test_screenshot.png', 'rb') as infile:
             _file = SimpleUploadedFile('test_screenshot', infile.read())

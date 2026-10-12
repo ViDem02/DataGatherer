@@ -40,6 +40,9 @@ CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS',
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
+# The browser app authenticates with cookies, also when it is served from another port in development
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOW_HEADERS = [
     'Files',
     'Accept',
@@ -48,9 +51,6 @@ CORS_ALLOW_HEADERS = [
     'Content-Type',
     'X-CSRFToken'
 ]
-
-CSRF_HEADER_NAME = "X-CSRFToken"
-
 
 CORS_ALLOW_METHODS = [
     'GET',
@@ -68,7 +68,8 @@ INSTALLED_APPS = [
     'storage_api',
     'job_api',
     'rest_framework_simplejwt',
-
+    'rest_framework_simplejwt.token_blacklist',
+    'axes',
 
     'rest_framework',
     'django_filters',
@@ -91,14 +92,20 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'data_gatherer.middlewares.UserMiddleware',
+    'axes.middleware.AxesMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    # Must come first: it refuses logins once too many attempts have failed
+    'data_gatherer.authentication.LoginLockoutBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'data_gatherer.urls'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        #'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'data_gatherer.authentication.CookieJWTAuthentication',
     ]
 }
 
@@ -198,8 +205,8 @@ TEST_MEDIA_ROOT = os.path.join(BASE_DIR, 'test_media')
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
-    "ROTATE_REFRESH_TOKENS": False,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
 
     "ALGORITHM": "HS256",
@@ -238,3 +245,24 @@ SIMPLE_JWT = {
 PRE_PATH = os.environ.get("PRE_PATH", default="")
 
 PUBLIC_PATH_STARTS_WITH = PRE_PATH + 'a/'
+
+# Login tokens live in HttpOnly cookies, out of reach of page scripts.
+# Set SECURE_COOKIES=1 as soon as the site is served over HTTPS.
+SECURE_COOKIES = bool(int(os.environ.get("SECURE_COOKIES", default=0)))
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+AUTH_COOKIE_ACCESS = 'access'
+AUTH_COOKIE_REFRESH = 'refresh'
+AUTH_COOKIE_SAMESITE = 'Strict'
+AUTH_COOKIE_REFRESH_PATH = '/' + PRE_PATH + 'a/token/'
+
+# Set when the files are behind nginx: Django authorizes, nginx sends the file (X-Accel-Redirect)
+MEDIA_ACCEL_REDIRECT_LOCATION = os.environ.get("MEDIA_ACCEL_REDIRECT_LOCATION", default="")
+
+# Login lockout (django-axes): a username is locked for one IP address after too many failures
+BEHIND_REVERSE_PROXY = bool(int(os.environ.get("BEHIND_REVERSE_PROXY", default=0)))
+AXES_FAILURE_LIMIT = int(os.environ.get("LOGIN_FAILURE_LIMIT", default=5))
+AXES_COOLOFF_TIME = timedelta(minutes=int(os.environ.get("LOGIN_LOCKOUT_MINUTES", default=15)))
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_CLIENT_IP_CALLABLE = 'data_gatherer.authentication.get_client_ip'

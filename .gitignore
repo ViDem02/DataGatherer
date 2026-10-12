@@ -17,3 +17,5 @@
 __pycache__/
 *.pyc
 /backend/data_gatherer/static/
+
+docs

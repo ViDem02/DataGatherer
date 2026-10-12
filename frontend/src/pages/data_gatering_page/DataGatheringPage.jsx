@@ -6,7 +6,7 @@ import {useQuery} from "@tanstack/react-query";
 import fetchImage from "../../queries/fetchImage";
 import {useMatch, useParams} from "react-router-dom";
 import HotButton from "../../components/hotstuff/HotButton";
-import {serverUrl} from "../../api_router/fx_api";
+import {mediaUrl} from "../../api_router/fx_api";
 
 // extremely important
 import 'react-image-crop/dist/ReactCrop.css'
@@ -51,7 +51,7 @@ const DataGatheringPage = () => {
         )
     }
 
-    const url = serverUrl + imgData.image_file_url
+    const url = mediaUrl(imgData.image_file_url)
 
     return (
         <SingleImgAnalysisLayout

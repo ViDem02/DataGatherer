@@ -16,9 +16,7 @@ const LoginPage = () => {
         retry: 1,
         onSuccess: (response) => {
             const cookies = new Cookies(null, { path: '/' })
-            cookies.set('access', response.access)
-            cookies.set('refresh', response.refresh)
-            cookies.set('username', username)
+            cookies.set('username', response.username)
 
             const current = cookies.get('current')
             const isLocalPath = typeof current === 'string' && current.startsWith('/') && !current.startsWith('//')
@@ -31,7 +29,7 @@ const LoginPage = () => {
         onError: (error) => {
             console.log(error)
             setIsLoading(false)
-            alert("Errore nel login")
+            alert(error.response?.status === 429 ? error.response.data.detail : "Errore nel login")
         },
         onMutate: () => {setIsLoading(true)}
     })

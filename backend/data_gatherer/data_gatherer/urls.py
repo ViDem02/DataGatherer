@@ -18,23 +18,24 @@ from data_gatherer.admin_sites import global_admin_site
 from functions_api import local_urls as fx_urls
 from storage_api import local_urls as storage_urls
 from storage_api.admin import admin
-from django.urls import path, include
-from django.conf.urls.static import static
+import re
+
+from django.urls import path, include, re_path
 from django.conf import settings
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView, TokenVerifyView,
-)
-from django.contrib.auth.views import LogoutView
+from rest_framework_simplejwt.views import TokenVerifyView
+
+from data_gatherer.auth_views import CookieTokenObtainView, CookieTokenRefreshView, LogoutView
+from storage_api.views.media_views import ProtectedMediaView
 
 
 pre_path = settings.PRE_PATH
 
 
 token_urlpatterns = [
-    path('obtain/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('obtain/', CookieTokenObtainView.as_view(), name='token_obtain_pair'),
+    path('refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('logout/', LogoutView.as_view(), name='token_logout'),
 ]
 
 public_paths = [
@@ -53,8 +54,9 @@ urlpatterns = [
     path('b/', include(private_paths)),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
 urlpatterns = [
-    path(pre_path, include(urlpatterns))
+    path(pre_path, include(urlpatterns)),
+    # Uploaded files are only served to logged-in owners, at the URL their FileField reports
+    re_path(r'^%s(?P<file_path>.+)$' % re.escape(settings.MEDIA_URL.lstrip('/')),
+            ProtectedMediaView.as_view(), name='protected_media'),
 ]

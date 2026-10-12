@@ -1,5 +1,6 @@
 import axios from "axios";
 import {defaultBaseUrl} from "../global_vars";
+import getAuthAxiosConfig from "./common/getAuthAxiosConfig";
 
 export const patchAlias = async ({id, alias}) => {
     const base = process.env.REACT_APP_API_URL || defaultBaseUrl
@@ -8,7 +9,8 @@ export const patchAlias = async ({id, alias}) => {
         {
             id: id,
             alias: alias
-        });
+        },
+        await getAuthAxiosConfig());
     return response.data;
 };
 

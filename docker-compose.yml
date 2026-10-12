@@ -4,7 +4,8 @@ services:
     django:
         build: ./backend/data_gatherer
         container_name: data-gatherer-server
-        command: python manage.py runserver 0.0.0.0:8000
+        # gthread workers keep answering heartbeats while long requests (matrix export, OCR) run
+        command: gunicorn data_gatherer.wsgi:application --bind 0.0.0.0:8000 --workers 3 --worker-class gthread --threads 4 --timeout 120 --access-logfile -
         env_file:
             - .env.docker
         volumes:
@@ -13,20 +14,6 @@ services:
             - prod_media:/srv/app/media
         depends_on:
             - db
-    react:
-        build: ./frontend
-        container_name: data-gatherer-client
-        command: "npx serve build -p 3000 --single"
-        env_file:
-            - .env.docker
-        tty: true
-        environment:
-            - CHOKIDAR_USEPOLLING=true
-        volumes:
-            - ./frontend/:/srv/app
-            - prod_node_modules:/srv/app/node_modules
-        depends_on:
-            - django
     db:
         image: postgres:16.1-alpine
         container_name: prod-swang-db
@@ -43,13 +30,13 @@ services:
         volumes:
             - prod_static:/srv/app/static
             - prod_media:/srv/app/media
+            # The React app, built with `npm run build` in frontend/
+            - ./frontend/build:/srv/frontend:ro
         depends_on:
             - django
-            - react
             - db
 
 volumes:
-    prod_node_modules:
     prod_postgres_data:
     prod_media:
     prod_static:

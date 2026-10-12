@@ -5,46 +5,53 @@ import Cookies from "universal-cookie";
 function handleGoToLogin(cookies){
     const current = document.location.pathname
     cookies.set('current', current)
-    console.log(current)
     document.location.assign('/login')
-    throw DOMException
 }
+
+// The login tokens are HttpOnly cookies that this code can't read: the browser sends them by itself.
+// When the access token has expired (401), get a new one once from the refresh cookie and retry.
+let refreshing = null
+
+axios.interceptors.response.use(undefined, async (error) => {
+    const request = error.config
+    const isTokenCall = request?.url?.includes('/a/token/')
+
+    if (error.response?.status !== 401 || !request || isTokenCall) {
+        throw error
+    }
+
+    const cookies = new Cookies(null, { path: '/' });
+    if (request._retried) {
+        handleGoToLogin(cookies)
+        throw error
+    }
+    request._retried = true
+
+    const base = process.env.REACT_APP_API_URL || defaultBaseUrl
+    try {
+        refreshing = refreshing || axios.post(base + `/a/token/refresh/`, {}, {withCredentials: true})
+        await refreshing
+    } catch {
+        handleGoToLogin(cookies)
+        throw error
+    } finally {
+        refreshing = null
+    }
+
+    request.headers['X-CSRFToken'] = cookies.get('csrftoken')
+    return axios(request)
+})
 
 export default async function getAuthAxiosConfig() {
     const cookies = new Cookies(null, { path: '/' });
 
-    let token = cookies.get("access")
-    let refresh = cookies.get("refresh")
-    const csrftoken = cookies.get('csrftoken')
-
-    let base = process.env.REACT_APP_API_URL || defaultBaseUrl
-
-    if (token === undefined) {
-        handleGoToLogin(cookies)
-    }
-
-    await axios.post(
-        base + `/a/token/verify/`,
-        {token}
-    ).catch(async () => {
-        if (refresh === undefined) {
-            document.location = '/login'
-        }
-        let refresh_response = await axios.post(
-            base + `/a/token/refresh/`,
-            {refresh}
-        ).catch(() => {
-            handleGoToLogin(cookies)
-        })
-        cookies.set('access', refresh_response.data.access)
-    })
-
     cookies.remove('current')
 
-
     return {
+        withCredentials: true,
         headers: {
-            Authorization: `Bearer ${cookies.get("access")}`
+            // Cookie-authenticated requests are only accepted with the CSRF token
+            'X-CSRFToken': cookies.get('csrftoken')
         }
     }
 }

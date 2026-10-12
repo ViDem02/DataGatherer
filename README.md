@@ -62,9 +62,14 @@ This application is designed for **local use only**.
 Please ensure:
 1. Port `8080` is not exposed publicly (restrict firewall / router). 
 2. Every secret in `.env.docker` is unique and random (it is git‑ignored; never commit it).
-3. Uploaded media does not contain sensitive PII unless you harden access: media files are served without authentication to anyone who knows their URL.
+3. If the site is ever served over HTTPS, set `SECURE_COOKIES=1` in `.env.docker`.
 
-> Important: No built‑in authentication hardening or role‑based access beyond Django’s defaults. You are responsible for securing deployments.
+What the application enforces:
+- Login tokens are kept in `HttpOnly`, `SameSite=Strict` cookies that page scripts cannot read; cookie‑authenticated writes require the CSRF token. Logging out revokes the refresh token.
+- After 5 failed logins (API or admin) a username is locked for 15 minutes from that IP address (`LOGIN_FAILURE_LIMIT`, `LOGIN_LOCKOUT_MINUTES`). Unlock earlier with `python manage.py axes_reset_username <username>`.
+- Uploaded images are only served to their owner (and to staff); nginx sends the file once Django has authorized the request.
+- Each user only sees and changes their own projects and data.
+- The app must be opened on the same host as its API (e.g. `http://127.0.0.1:8080`), otherwise the browser does not send the login cookies.
 
 ## Prerequisites
 
@@ -78,6 +83,7 @@ Ensure you have:
 git clone https://github.com/ViDem02/DataGatherer.git
 cd DataGatherer
 cp .env.docker.example .env.docker   # then replace every "change-me" value
+(cd frontend && npm ci && npm run build)   # nginx serves frontend/build
 docker compose build
 docker compose up
 ```
@@ -102,6 +108,8 @@ python manage.py test
 ```
 
 Outside Docker, set `DEBUG=1` (development only) or provide a `SECRET_KEY`: the backend refuses to start without a secret key when debug mode is off.
+
+Frontend development: `cd frontend && npm start` serves the app on `http://localhost:3000` and forwards `/a/`, `/b/` and `/media/` to the backend on `127.0.0.1:8000`.
 
 ## Project Structure (Selected)
 

@@ -1,31 +1,21 @@
 ### Obtain Token
 # Credentials come from http-client.private.env.json (git-ignored), e.g.
 # {"dev": {"username": "...", "password": "..."}}
+# The tokens come back as HttpOnly cookies, which the HTTP client stores and resends.
 POST http://localhost:8000/a/token/obtain/
 Content-Type: application/x-www-form-urlencoded
 
 username={{username}}&password={{password}}
 
-> {%
-    client.global.set("auth_token", response.body.access);
-    client.global.set("refresh", response.body.refresh);
-%}
-
-### Use Token to Get Hashtags
+### Use the access cookie to Get Hashtags
 GET http://localhost:8000/b/storage_api/hashtags/
-Authorization: Bearer {{auth_token}}
 
 
-### Refresh
+### Refresh (rotates both cookies)
 POST http://localhost:8000/a/token/refresh/
-Content-Type: application/x-www-form-urlencoded
 
-refresh={{refresh}}
-
-> {%
-    client.global.set("auth_token_2", response.body.access);
-%}
-
-### Use Token to Get Hashtags
+### Use the new access cookie to Get Hashtags
 GET http://localhost:8000/b/storage_api/hashtags/
-Authorization: Bearer {{auth_token_2}}
+
+### Logout (revokes the refresh token, deletes the cookies)
+POST http://localhost:8000/a/token/logout/

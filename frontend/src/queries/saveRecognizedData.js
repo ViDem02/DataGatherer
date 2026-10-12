@@ -1,5 +1,6 @@
 import axios from "axios";
 import {defaultBaseUrl} from "../global_vars";
+import getAuthAxiosConfig from "./common/getAuthAxiosConfig";
 
 export const saveRecognizedData = async ({id, recognizedData}) => {
     const base = process.env.REACT_APP_API_URL || defaultBaseUrl
@@ -8,7 +9,8 @@ export const saveRecognizedData = async ({id, recognizedData}) => {
         {
             id: id,
             recognizedText: recognizedData
-        });
+        },
+        await getAuthAxiosConfig());
 
     return {};
 };

@@ -1,4 +1,4 @@
-import {defaultBaseUrl} from "../../global_vars";
+import {mediaUrl} from "../../api_router/fx_api";
 import {useMutation} from "@tanstack/react-query";
 import {deleteImage} from "../../queries/deleteImage";
 import {useRef} from "react";
@@ -28,8 +28,7 @@ const ImageBox = ({showImage, prjDataRefetch, userId, isDataGathered, imageFileU
         }
     })
 
-    let base = process.env.REACT_APP_API_URL || defaultBaseUrl
-    let source = base + imageFileUrl
+    let source = mediaUrl(imageFileUrl)
 
     const handleDeleteImage = () => {
         if (isDataGathered){

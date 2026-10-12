@@ -1,12 +1,16 @@
 import Cookies from "universal-cookie";
+import axios from "axios";
+import {defaultBaseUrl} from "../../global_vars";
 
 
 const Navbar = () => {
     const cookies = new Cookies(null, { path: '/' });
 
-    const handleLogout = () => {
-        cookies.remove('access')
-        cookies.remove('refresh')
+    const handleLogout = async () => {
+        const base = process.env.REACT_APP_API_URL || defaultBaseUrl
+        // The login cookies are HttpOnly: only the server can revoke and delete them
+        await axios.post(base + '/a/token/logout/', {}, {withCredentials: true}).catch(console.log)
+        cookies.remove('username')
         document.location = '/login'
     }
 

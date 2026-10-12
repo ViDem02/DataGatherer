@@ -1,0 +1,13 @@
+# Secrets, database dumps and collected data must not end up in the image
+.env
+db.sqlite3
+load.json
+dump.json
+annoy_config.json
+usernames_index.ann
+media
+jobs_elaborations
+static
+requests/http-client.private.env.json
+**/__pycache__
+**/*.pyc

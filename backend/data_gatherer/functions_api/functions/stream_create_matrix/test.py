@@ -27,7 +27,7 @@ class StreamCreateMatrix(TestCase):
             'username': self.anne.username,
             'password': "giacomogiacomo"
         })
-        self.token = auth_response.json()["access"]
+        self.token = auth_response.cookies["access"].value
 
         self.project1 = Project.objects.create(
             name='Test',

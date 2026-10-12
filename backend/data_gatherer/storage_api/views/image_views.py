@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from storage_api.models.image_models import *
 
 from storage_api.serializers.image_serializers import ImageSerializer, ImgCropSerializer, ImgDataSerializer
@@ -19,6 +21,8 @@ class ImgCropViewSet(OwnedInstancesCompleteModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ['image', 'fieldName']
 
+    # The old crop is deleted before the new one is validated: one transaction, so a failure keeps the old one
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         img_id = request.data['image']
         field_name = request.data['fieldName']
@@ -34,6 +38,8 @@ class ImgDataViewSet(OwnedInstancesCompleteModelViewSet):
     filter_backends = (filters.DjangoFilterBackend, )
     filterset_fields = ['image', 'fieldName']
 
+    # The old value is deleted before the new one is validated: one transaction, so a failure keeps the old one
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer: ImgDataSerializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)

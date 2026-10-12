@@ -278,3 +278,24 @@ class StreamCreateMatrix(TestCase):
         resulting_csv = wrapper.read()
 
         assert resulting_csv == "%s%s%s" % (chr(34), chr(34), chr(10))
+
+    def test_matrix_uses_a_fixed_number_of_queries(self):
+        from django.http import StreamingHttpResponse
+        from functions_api.functions.stream_create_matrix.logic import stream_create_matrix
+
+        hashtags = [Hashtag.objects.create(project=self.project1, content='h%s' % i, createdFromImage=self.image,
+                                           author=self.anne) for i in range(20)]
+        users = [IGUser.objects.create(project=self.project1, name='u%s' % i, createdFromImage=self.image,
+                                       author=self.anne) for i in range(20)]
+        for i, hashtag in enumerate(hashtags):
+            UserHashtagUse.objects.create(project=self.project1, igUser=users[i], hashtag=hashtag,
+                                          image=self.image, author=self.anne)
+
+        # Counts, users and hashtags: three queries whatever the size of the project (not one per pair)
+        with self.assertNumQueries(3):
+            response = stream_create_matrix(self.project1, StreamingHttpResponse(content_type='text/csv'))
+            rows = b"".join(response.streaming_content).decode().splitlines()
+
+        assert len(rows) == 21
+        assert rows[0] == ';' + ';'.join('u%s' % i for i in range(20))
+        assert rows[5] == 'h4;' + ';'.join('1' if i == 4 else '0' for i in range(20))

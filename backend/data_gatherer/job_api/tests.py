@@ -285,3 +285,44 @@ class ModelsTests(TransactionTestCase):
 
         for i in range(lines):
             assert all(x == y for x, y in zip(data[i], expectation[i]))
+
+    @close_db_connections
+    def test_job_is_not_completed_when_a_task_fails(self):
+        import threading
+        from unittest import mock
+
+        job = Job.objects.create(
+            title="failing",
+            taskGranularity=5,
+            project=self.project
+        )
+        initiate_job(job)
+        assert Task.objects.filter(job=job).count() == 2
+
+        # The first task to write its file fails; the other one succeeds
+        real_writer = csv.writer
+        lock = threading.Lock()
+        calls = []
+
+        def flaky_writer(*args, **kwargs):
+            with lock:
+                calls.append(1)
+                first = len(calls) == 1
+            if first:
+                raise RuntimeError("simulated failure")
+            return real_writer(*args, **kwargs)
+
+        with mock.patch('job_api.logic.csv.writer', side_effect=flaky_writer):
+            work_job(job, wait=True)
+
+        job.refresh_from_db()
+        assert job.isCompleted is False
+        assert job.isWorking is False
+        assert Task.objects.filter(job=job, isCompleted=True).count() == 1
+        assert Task.objects.filter(job=job, inProgress=True).count() == 0
+
+        # Working the job again only redoes the failed task, then the job is complete
+        work_job(job, wait=True)
+        job.refresh_from_db()
+        assert job.isCompleted is True
+        assert Task.objects.filter(job=job, isCompleted=False).count() == 0

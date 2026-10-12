@@ -6,8 +6,8 @@ from django.test import Client
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from storage_api.models.image_models import Image
-from storage_api.models.project_models import Project
+from storage_api.models.image_models import Image, ImgCrop, ImgData
+from storage_api.models.project_models import Project, ProjectDefaultCrop
 
 pre_path = os.environ.get('TEST_PRE_PATH', default='')
 
@@ -279,6 +279,39 @@ class ImgCropViewSetTestCase(TestCase):
 
         assert response.status_code == 201
 
+    def test_failed_replacement_keeps_existing_crop(self):
+        c = Client()
+
+        c.post(pre_path + '/b/storage_api/img_crops/', {
+            'fieldName': 'Hashtags',
+            'topPercent': 0,
+            'leftPercent': 0,
+            'heightPercent': 10,
+            'widthPercent': 50,
+            'recognizedText': '',
+            'image': self.image.pk
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        # Invalid width: the request fails after the old crop was deleted, which must be undone
+        response = c.post(pre_path + '/b/storage_api/img_crops/', {
+            'fieldName': 'Hashtags',
+            'topPercent': 0,
+            'leftPercent': 0,
+            'heightPercent': 20,
+            'widthPercent': 1e9,
+            'recognizedText': '',
+            'image': self.image.pk
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        assert response.status_code == 400
+        crops = ImgCrop.objects.filter(image=self.image, fieldName='Hashtags')
+        assert crops.count() == 1
+        assert crops.get().heightPercent == 10
+
 
 class ImgDataViewSetTestCase(TestCase):
 
@@ -369,6 +402,29 @@ class ImgDataViewSetTestCase(TestCase):
 
         assert response.status_code == 201
 
+    def test_failed_replacement_keeps_existing_data(self):
+        c = Client()
+
+        c.post(pre_path + '/b/storage_api/img_data/', {
+            'fieldName': 'Username',
+            'value': 'bubi',
+            'image': self.image.pk
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        # Value over the 5000-character limit: the request fails after the old value was deleted
+        response = c.post(pre_path + '/b/storage_api/img_data/', {
+            'fieldName': 'Username',
+            'value': 'x' * 6000,
+            'image': self.image.pk
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        assert response.status_code == 400
+        assert ImgData.objects.get(image=self.image, fieldName='Username').value == 'bubi'
+
 
 class ProjectViewSetTestCase(TestCase):
     pass
@@ -455,3 +511,32 @@ class ProjectDefaultCropViewSetTestCase(TestCase):
         })
 
         assert response.status_code == 201
+
+    def test_failed_replacement_keeps_existing_default(self):
+        c = Client()
+
+        c.post(pre_path + '/b/storage_api/prj_default_crop/', {
+            'project': self.project.pk,
+            'topPercent': 0,
+            'leftPercent': 0,
+            'heightPercent': 1,
+            'widthPercent': 10,
+            'fieldName': 'Bub',
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        # Invalid width: the request fails after the old default was deleted, which must be undone
+        response = c.post(pre_path + '/b/storage_api/prj_default_crop/', {
+            'project': self.project.pk,
+            'topPercent': 0,
+            'leftPercent': 0,
+            'heightPercent': 1,
+            'widthPercent': 1e9,
+            'fieldName': 'Bub',
+        }, headers={
+            'Authorization': 'Bearer %s' % self.token
+        })
+
+        assert response.status_code == 400
+        assert ProjectDefaultCrop.objects.get(project=self.project, fieldName='Bub').widthPercent == 10

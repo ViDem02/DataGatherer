@@ -1,6 +1,6 @@
 import traceback
 
-from django.db import models
+from django.db import models, transaction
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from functions_api.functions.upload_pictures.logic import check_similarity_between_project_images
@@ -99,12 +99,14 @@ class ImgCrop(models.Model):
                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        ImgCrop.objects.filter(
-            image=self.image,
-            fieldName=self.fieldName,
-        ).delete()
+        # OCR runs before the transaction; the replacement itself is all or nothing
+        with transaction.atomic():
+            ImgCrop.objects.filter(
+                image=self.image,
+                fieldName=self.fieldName,
+            ).delete()
 
-        super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+            super().save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def __str__(self):
         return "crop %s of img %s" % (self.id, self.image_id)

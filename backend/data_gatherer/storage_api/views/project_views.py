@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -22,6 +23,8 @@ class ProjectDefaultCropViewSet(OwnedInstancesCompleteModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ['project', 'fieldName']
 
+    # The old default is deleted before the new one is validated: one transaction, so a failure keeps the old one
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer:ProjectDefaultCropSerializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)

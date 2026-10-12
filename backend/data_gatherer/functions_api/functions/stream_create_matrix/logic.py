@@ -1,21 +1,10 @@
 import csv
-import itertools
 
-from django.http import HttpResponse, StreamingHttpResponse
+from django.db.models import Count
+from django.http import StreamingHttpResponse
 
 from storage_api.models.data_models import Hashtag, IGUser, UserHashtagUse
-from storage_api.models.image_models import ImgCrop, Image
 from storage_api.models.project_models import Project
-
-
-class Counter:
-    val = 0
-
-    def increase(self):
-        self.val = self.val + 1
-
-    def get(self):
-        return self.val
 
 
 class CSVBuffer:
@@ -23,72 +12,32 @@ class CSVBuffer:
         return value
 
 
-def csv_serializer(hashtag: Hashtag, prj_users, project: Project, counter_instance: Counter, first_row, prj_hashtags):
-    if counter_instance.get() == 0:
-        counter_instance.increase()
-        return first_row
-    
-    prj_hashtags = list(prj_hashtags)
-
-    tot = len(prj_hashtags)
-    pos = prj_hashtags.index(hashtag)
-    
-    print(f"Writing row {pos}/{tot}")
-
-    row = [hashtag.content]
-    for item in prj_users:
-        user: IGUser = item
-        row.append(UserHashtagUse.objects.filter(
-            igUser=user,
-            hashtag=hashtag,
-            project=project
-        ).count())
-    return row
-
-
 def stream_create_matrix(project: Project, response: StreamingHttpResponse):
+    # Three queries whatever the size of the project: the database counts the uses of every
+    # user-hashtag pair in one GROUP BY, instead of one COUNT query per pair.
+    counts = {
+        (row['hashtag_id'], row['igUser_id']): row['uses']
+        for row in UserHashtagUse.objects.filter(project=project)
+        .values('hashtag_id', 'igUser_id')
+        .annotate(uses=Count('id'))
+    }
+
+    # Only the users and hashtags used at least once appear in the matrix
+    prj_users = list(
+        IGUser.objects.filter(project=project, userhashtaguse__isnull=False).distinct().order_by('pk')
+    )
     prj_hashtags = Hashtag.objects.filter(
-        project=project
-    )
-    prj_users = IGUser.objects.filter(
-        project=project
-    )
-
-    for hashtag in prj_hashtags:
-        uses = UserHashtagUse.objects.filter(
-            hashtag=hashtag
-        ).count()
-
-        if uses == 0:
-            prj_hashtags = prj_hashtags.exclude(pk=hashtag.pk)
-
-    for user in prj_users:
-        uses = UserHashtagUse.objects.filter(
-            igUser=user
-        ).count()
-
-        if uses == 0:
-            prj_users = prj_users.exclude(pk=user.pk)
-
-    username_strings = ['']
-    for item in prj_users:
-        user: IGUser = item
-        username_strings.append(
-            user.matrix_name
-        )
+        project=project, userhashtaguse__isnull=False
+    ).distinct().order_by('pk')
 
     writer = csv.writer(CSVBuffer(), delimiter=';')
 
-    # Molto importante! Serve per fare in modo che la prima riga di hashtags
-    # non venga manggiata nella stampa degli username_strings, ovvero dei titoli
-    iterator = itertools.chain([''], prj_hashtags)
+    def rows():
+        yield writer.writerow([''] + [user.matrix_name for user in prj_users])
+        for hashtag in prj_hashtags.iterator():
+            yield writer.writerow(
+                [hashtag.content] + [counts.get((hashtag.pk, user.pk), 0) for user in prj_users]
+            )
 
-    counter_instance = Counter()
-
-
-
-    response = StreamingHttpResponse((writer.writerow(csv_serializer(
-        hashtag_item, prj_users, project, counter_instance, username_strings, prj_hashtags
-    )) for hashtag_item in iterator), content_type="text/csv")
-
+    response.streaming_content = rows()
     return response

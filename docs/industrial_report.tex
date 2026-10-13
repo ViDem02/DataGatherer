@@ -1,0 +1,310 @@
+  % ======================================================================
+  %  DataGatherer --- Technical assessment for industry readers
+  %  Based on the personal template in docs/template/doc.tex
+  %
+  %  Compile: latexmk -pdf industrial_report.tex
+  % ======================================================================
+
+  \documentclass[10pt,a4paper]{scrartcl}
+
+  % --------------------------------------------------
+  % Encoding and language
+  % --------------------------------------------------
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage[english]{babel}
+
+  % --------------------------------------------------
+  % Page layout
+  % --------------------------------------------------
+  \usepackage[
+    top=18mm,
+    bottom=18mm,
+    left=20mm,
+    right=20mm,
+    includefoot
+  ]{geometry}
+
+  % --------------------------------------------------
+  % Mathematics and graphics
+  % --------------------------------------------------
+  \usepackage{graphicx}
+  \usepackage{amsmath,amssymb}
+  \usepackage{bm}
+  \setlength{\jot}{0.5cm}
+
+  % --------------------------------------------------
+  % Tables
+  % --------------------------------------------------
+  \usepackage{booktabs}
+  \usepackage{tabularx}
+  \usepackage{array}
+  \usepackage{ragged2e}
+
+  % A ragged-right fixed-width column for use in tabularx:
+  %   \begin{tabularx}{\textwidth}{@{}L{3cm} X@{}}
+  \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+
+  % --------------------------------------------------
+  % Typography
+  % --------------------------------------------------
+  \usepackage[scaled=0.95]{helvet}
+  \usepackage[expansion=false]{microtype}   % expansion=false avoids font errors
+  \renewcommand{\familydefault}{\sfdefault} % sans-serif throughout
+
+  % --------------------------------------------------
+  % Lists
+  % --------------------------------------------------
+  \usepackage{enumitem}
+  \setlist[itemize]{
+    leftmargin=*,
+    topsep=2pt,
+    parsep=0pt,
+    partopsep=0pt,
+    itemsep=3pt
+  }
+  \setlist[description]{
+    leftmargin=0pt,
+    topsep=2pt,
+    parsep=0pt,
+    itemsep=3pt
+  }
+
+  % --------------------------------------------------
+  % Colour and hyperlinks
+  % --------------------------------------------------
+  \usepackage[dvipsnames]{xcolor}
+  \usepackage[hidelinks]{hyperref}
+
+  \definecolor{accent}{RGB}{0,129,88}   % change this to restyle everything
+
+  % \emph produces upright accent-coloured text instead of italic.
+  % Use \textit{} when you genuinely want italics.
+  \renewcommand{\emph}[1]{\textcolor{accent}{#1}}
+
+  % --------------------------------------------------
+  % Header and footer
+  % --------------------------------------------------
+  \usepackage[automark,headsepline=false,footsepline=false]{scrlayer-scrpage}
+  \clearpairofpagestyles
+
+  \ifoot{Victor Gabriele De Matteis}
+  \cfoot{\pagemark}
+  \ofoot{DataGatherer --- Technical assessment}
+
+  \setlength{\footskip}{20mm}  % pushes footer toward the page edge
+  \pagestyle{scrheadings}
+
+  % --------------------------------------------------
+  % Spacing
+  % --------------------------------------------------
+  \setlength{\parindent}{0pt}
+  \setlength{\parskip}{0.45em}
+
+  % --------------------------------------------------
+  % Section formatting
+  % --------------------------------------------------
+  \RedeclareSectionCommand[
+    beforeskip=1.4ex plus 0.2ex minus 0.1ex,
+    afterskip=0.6ex
+  ]{section}
+  \RedeclareSectionCommand[
+    beforeskip=1.0ex plus 0.2ex minus 0.1ex,
+    afterskip=0.4ex
+  ]{subsection}
+  \RedeclareSectionCommand[
+    beforeskip=0.7ex plus 0.2ex minus 0.1ex,
+    afterskip=0.3ex
+  ]{subsubsection}
+
+  \setkomafont{section}{\large\bfseries\color{accent}}
+  \setkomafont{subsection}{\normalsize\bfseries\color{accent}}
+  \setkomafont{subsubsection}{\normalsize\bfseries}
+
+  % A section command that adds a faint rule beneath the title.
+  % Use \RuleSection{Title} instead of \section{Title} where you want it.
+  \newcommand{\RuleSection}[1]{%
+    \section{#1}%
+    \vspace{0.2em}{\color{accent!35}\hrule height 0.4pt}\vspace{0.3em}%
+  }
+
+  % --------------------------------------------------
+  % Additions for this document
+  % --------------------------------------------------
+  \DisableLigatures[-]{encoding=T1, family=tt*}
+  \DeclareRobustCommand{\code}[1]{{\frenchspacing\texttt{\detokenize{#1}}}}
+
+  % Readiness ratings
+  \newcommand{\ready}{\textcolor{accent}{\textbf{Ready}}}
+  \newcommand{\partly}{\textcolor{Dandelion!80!black}{\textbf{Partial}}}
+  \newcommand{\notready}{\textcolor{BrickRed}{\textbf{Not ready}}}
+
+  \setlength{\emergencystretch}{3em}
+  \usepackage[section]{placeins}
+  \makeatletter
+  \setlength{\@fptop}{0pt}
+  \makeatother
+
+  % ======================================================================
+  \begin{document}
+  % ======================================================================
+
+  % --------------------------------------------------
+  % Title block
+  % --------------------------------------------------
+  \begin{center}
+    {\Huge\bfseries\color{accent} DataGatherer}\\[0.25cm]
+    {\small Technical assessment --- status, risks and next steps --- October 2026}\\[0.15cm]
+    {\small Victor Gabriele De Matteis \quad\textbullet\quad github.com/ViDem02/DataGatherer}\\[0.2cm]
+    {\color{accent!35}\hrule height 0.5pt}
+  \end{center}
+
+  \vspace{0.3em}
+
+  % ======================================================================
+  %  BODY
+  % ======================================================================
+
+  \RuleSection{Summary}
+  \label{sec:summary}
+
+  \textbf{What it is.} A web application that turns screenshots of Instagram posts into a spreadsheet of who
+  used which hashtag, how many times. An operator crops the account name and the hashtags on each screenshot,
+  text recognition (OCR) reads them, the operator confirms or corrects the text, and the application builds
+  a user--hashtag matrix ready for network or market analysis.
+
+  \textbf{Status.} Suitable \emph{today} as a tool run on one computer by one person or a small team. It is
+  \emph{not yet suitable} to be offered to customers or hosted on a network: the public code history still
+  holds old secrets and third-party personal data, the collected data has no GDPR framework, and there is no
+  HTTPS, automated backup or automated test gate.
+
+  \textbf{Recommendation.} Use it internally as is. Before any wider use, complete the four items of
+  Section~\ref{sec:next} marked ``before any external use''; together they are estimated at one to two weeks.
+
+  \begin{table}[h]
+  \small
+  \centering
+  \renewcommand{\arraystretch}{1.1}
+  \begin{tabularx}{\textwidth}{@{}L{4.4cm} L{2cm} X@{}}
+  \toprule
+  \textbf{Area} & \textbf{Rating} & \textbf{Basis} \\[.3cm]
+  \midrule
+  Core functionality & \ready & Upload, cropping, OCR, verification, matrix export all work end to end. \\[.3cm]
+  Ease of installation & \ready & Docker Desktop plus a double-click; ready-made images (about 780\,MB; 36 seconds to download in our test). \\[.3cm]
+  Application security & \ready & Reviewed and hardened in October 2026: per-user data isolation, secure login, login lockout, private files. \\[.3cm]
+  Repository hygiene & \notready & Old secrets and personal data remain in the public git history. \\[.3cm]
+  Data protection (GDPR) & \notready & Personal data of third parties is collected without legal basis, retention or deletion process. \\[.3cm]
+  Reliability and operations & \partly & No automated backups; long batch computations stop if the server restarts. \\[.3cm]
+  Quality assurance & \partly & 39 automated tests, run by hand; CI builds the images but does not run the tests yet. \\[.3cm]
+  Scalability & \partly & One server; fine for thousands of images, not for many simultaneous teams. \\[.3cm]
+  \bottomrule
+  \end{tabularx}
+  \caption{Readiness at a glance.}
+  \label{tab:readiness}
+  \end{table}
+
+  \RuleSection{Value}
+  \label{sec:value}
+
+  The repository's own measurements (\code{stats.md}) report 1{,}089 screenshots processed. They estimate about
+  2 seconds of automated work per image against about 30 seconds for manual transcription, i.e.\ roughly 93\,\%
+  less effort. These figures are \emph{estimates}, not timed measurements, and they exclude the operator's
+  verification of each text, which remains necessary because OCR misreads accents and similar letters.
+
+  The output is a standard CSV file (rows: hashtags, columns: accounts, cells: number of posts), directly usable in
+  spreadsheets, Python/R or network-analysis tools.
+
+  \RuleSection{How It Is Built}
+  \label{sec:built}
+
+  \begin{table}[h]
+  \small
+  \centering
+  \renewcommand{\arraystretch}{1.1}
+  \begin{tabularx}{\textwidth}{@{}L{3.4cm} X@{}}
+  \toprule
+  \textbf{Component} & \textbf{Technology} \\[.3cm]
+  \midrule
+  User interface & React web app, served by nginx; works in any modern browser. \\[.3cm]
+  Application & Python, Django 5.2 LTS (supported until April 2028), REST API, Tesseract OCR. \\[.3cm]
+  Data & PostgreSQL 16; uploaded images on a Docker volume. \\[.3cm]
+  Delivery & Three Docker containers; images built automatically for Intel/AMD and ARM and published on GitHub. \\[.3cm]
+  Runs on & Windows, macOS or Linux with Docker Desktop. \\[.3cm]
+  \bottomrule
+  \end{tabularx}
+  \caption{Technology.}
+  \label{tab:tech}
+  \end{table}
+
+  The application is reachable only from the computer it runs on, by design. Each user account sees only its own
+  projects and images; an administrator manages accounts through a built-in admin panel.
+
+  \RuleSection{What Was Done in October 2026}
+  \label{sec:done}
+
+  A review on 12 October 2026 found the application unsafe to expose: anyone could download the whole database,
+  users could read and change each other's data, and secrets were stored in the code. The same day:
+  \begin{itemize}
+    \item \textbf{Security:} every hole found was closed; login tokens moved to browser-protected cookies; repeated
+          wrong passwords lock the account for 15 minutes; uploaded images became private; dependency scans now report
+          no known vulnerabilities (they reported 64 in the backend and 116 in the frontend).
+    \item \textbf{Installation:} from a multi-step technical setup (Node.js, secrets written by hand, 10--20 minutes of building) to
+          a double-click that generates its own secrets and downloads ready-made images.
+    \item \textbf{Correctness:} batch jobs no longer report success when part of the work failed; the matrix export
+          went from one database query per cell to three queries in total (a 20 $\times$ 20 example: 442 queries
+          before); edits that fail can no longer delete existing data.
+  \end{itemize}
+  Each fix was verified with automated tests or end-to-end checks, including a real browser.
+
+  \RuleSection{Risks}
+  \label{sec:risks}
+
+  \begin{table}[h]
+  \small
+  \centering
+  \renewcommand{\arraystretch}{1.1}
+  \begin{tabularx}{\textwidth}{@{}L{4.2cm} L{1.5cm} X@{}}
+  \toprule
+  \textbf{Risk} & \textbf{Level} & \textbf{Mitigation} \\[.3cm]
+  \midrule
+  Old secrets, database dumps and a third party's utility bill in the public code history & High & Rotate every secret (done locally), then rewrite the history or recreate the repository. \\[.3cm]
+  Personal data of Instagram users (GDPR); platform terms of use & High & Legal review: legal basis, retention period, deletion on request, record of processing; check Instagram's terms. \\[.3cm]
+  Data loss & Medium & Scheduled database and image backups with a tested restore. \\[.3cm]
+  Wrong numbers in the matrix from operator errors (duplicate screenshots, OCR typos accepted) & Medium & Guards in the interface: duplicate detection, warnings before saving (designed, not built). \\[.3cm]
+  Regressions from future changes & Medium & Run the tests automatically on every change. \\[.3cm]
+  Exposure if run on a network & Medium & Keep it local, or add HTTPS and secure cookies before exposing it. \\[.3cm]
+  Windows installation not yet tried on a real PC & Low & One test run on Windows. \\[.3cm]
+  \bottomrule
+  \end{tabularx}
+  \caption{Main risks.}
+  \label{tab:risks}
+  \end{table}
+
+  \clearpage
+  \RuleSection{Next Steps}
+  \label{sec:next}
+
+  \begin{table}[h]
+  \small
+  \centering
+  \renewcommand{\arraystretch}{1.1}
+  \begin{tabularx}{\textwidth}{@{}L{6.4cm} L{2.4cm} X@{}}
+  \toprule
+  \textbf{Action} & \textbf{Effort} & \textbf{When} \\[.3cm]
+  \midrule
+  Purge the code history and rotate any remaining secret & 1 day & Before any external use \\[.3cm]
+  GDPR assessment of the collected data & legal, 1--2 weeks & Before any external use \\[.3cm]
+  Automated tests on every change, scan for committed secrets & 2--3 days & Before any external use \\[.3cm]
+  Automated backups and a tested restore & 1--2 days & Before any external use \\[.3cm]
+  Operator guards against duplicate screenshots and OCR typos & 2--3 weeks & To improve data quality \\[.3cm]
+  HTTPS, background job queue, monitoring, staging environment & 2--4 weeks & Only for a hosted, multi-team service \\[.3cm]
+  \bottomrule
+  \end{tabularx}
+  \caption{Recommended actions. Efforts are estimates for one developer.}
+  \label{tab:next}
+  \end{table}
+
+  Detailed technical documentation is available on request: a change record of the security work, the user
+  and maintenance workflows, and an in-depth description of the architecture and algorithms.
+
+  \end{document}

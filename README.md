@@ -2,6 +2,8 @@
 
 Semi‑automatic structured data extraction from image collections
 
+**[Technical assessment (PDF, 3 pages)](docs/industrial_report.pdf)**: what the application does, how ready it is, its risks and the next steps.
+
 ## Overview
 
 DataGatherer is a full‑stack application that assists in turning sets of images into structured, queryable information. It provides tooling to upload, organize, derive relationships, and finally generate a user–hashtag matrix showing how frequently users have used specific tags. The goal: accelerate manual curation while preserving accuracy.

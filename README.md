@@ -20,14 +20,26 @@ DataGatherer is a full‑stack application that assists in turning sets of image
 
 ## Architecture
 
-```
-┌────────────┐    ┌──────────────┐    ┌──────────────┐
-│   React    │ →  │   Django API │ →  │  Services /  │
-│ Frontend   │    │  (job/storage│    │  Compute/Idx │
-└────────────┘    │  functions)  │    └──────────────┘
-				│          │        │                │
-				▼          ▼        ▼                ▼
-		 Nginx ← docker network / persistence / media volume
+
+```mermaid
+flowchart LR
+    Client(["Browser client"])
+    subgraph net["docker network"]
+        direction LR
+        NGINX["Nginx<br/>reverse proxy · TLS · static/media"]
+        React["React frontend<br/>SPA (Vite)"]
+        API["Django API<br/>job · storage functions"]
+        Compute["Services<br/>Compute · Indexing"]
+        DB[("PostgreSQL<br/>persistence")]
+        Media[("Media volume<br/>uploads · PDFs")]
+    end
+    Client -->|HTTPS| NGINX
+    NGINX -->|/ static| React
+    NGINX -->|/api| API
+    API --> Compute
+    API --> DB
+    API --> Media
+    Compute --> Media
 ```
 
 Core backend apps:

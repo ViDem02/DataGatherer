@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="250" viewBox="0 0 1280 250" role="img" aria-labelledby="t d">
+  <title id="t">DataGatherer workflow</title>
+  <desc id="d">Five steps: upload screenshots, crop the username and hashtags, OCR reads the text, you verify it, export the matrix.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07110d"/>
+      <stop offset="1" stop-color="#0b1f18"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#173328"/>
+      <stop offset="1" stop-color="#0f241c"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.2"/>
+      <stop offset="0.5" stop-color="#34d399" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#34d399" stop-opacity="0.2"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.1" fill="#ffffff" fill-opacity="0.05"/>
+    </pattern>
+  </defs>
+  <style>
+    text { font-family: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    @keyframes dash { to { stroke-dashoffset: -28; } }
+    @keyframes travel { 0% { transform: translateX(0); opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { transform: translateX(1000px); opacity: 0; } }
+    .flow { animation: dash 1s linear infinite; }
+    .packet { animation: travel 6s cubic-bezier(.45,.05,.55,.95) infinite; }
+    .ic { fill: none; stroke: #6ee7b7; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+
+  <rect width="1280" height="250" rx="24" fill="url(#bg)"/>
+  <rect width="1280" height="250" rx="24" fill="url(#dots)"/>
+
+  <!-- connector -->
+  <path d="M140 100 H1140" stroke="url(#line)" stroke-width="2" stroke-dasharray="6 8" class="flow"/>
+  <circle cx="140" cy="100" r="5" fill="#6ee7b7" class="packet"/>
+
+  <!-- step template: circle at (x,100) -->
+  <g font-size="13" text-anchor="middle">
+
+    <!-- 1 Upload -->
+    <g transform="translate(140,100)">
+      <circle r="44" fill="url(#node)" stroke="#2f5646" stroke-width="1.5"/>
+      <path class="ic" d="M-14 6 V14 H14 V6"/>
+      <path class="ic" d="M0 8 V-14 M-8 -6 L0 -14 L8 -6"/>
+      <circle cx="30" cy="-30" r="12" fill="#34d399"/>
+      <text x="30" y="-25.5" font-size="12" font-weight="800" fill="#052e21">1</text>
+      <text y="76" font-size="17" font-weight="700" fill="#ecfdf5">Upload</text>
+      <text y="98" fill="#8fb8a8">drop a batch of screenshots</text>
+      <text y="116" fill="#8fb8a8">duplicates are flagged</text>
+    </g>
+
+    <!-- 2 Crop -->
+    <g transform="translate(390,100)">
+      <circle r="44" fill="url(#node)" stroke="#2f5646" stroke-width="1.5"/>
+      <path class="ic" d="M-8 -18 V8 H18"/>
+      <path class="ic" d="M-18 -8 H8 V18"/>
+      <circle cx="30" cy="-30" r="12" fill="#34d399"/>
+      <text x="30" y="-25.5" font-size="12" font-weight="800" fill="#052e21">2</text>
+      <text y="76" font-size="17" font-weight="700" fill="#ecfdf5">Crop</text>
+      <text y="98" fill="#8fb8a8">box the username + hashtags</text>
+      <text y="116" fill="#8fb8a8">reuse a default crop per project</text>
+    </g>
+
+    <!-- 3 OCR -->
+    <g transform="translate(640,100)">
+      <circle r="44" fill="url(#node)" stroke="#34d399" stroke-width="2"/>
+      <circle r="52" fill="none" stroke="#34d399" stroke-opacity="0.25" stroke-width="1.5"/>
+      <path class="ic" d="M-16 -12 V-16 H-12 M12 -16 H16 V-12 M16 12 V16 H12 M-12 16 H-16 V12"/>
+      <text y="6" font-size="16" font-weight="800" fill="#6ee7b7">Aa</text>
+      <circle cx="30" cy="-30" r="12" fill="#34d399"/>
+      <text x="30" y="-25.5" font-size="12" font-weight="800" fill="#052e21">3</text>
+      <text y="76" font-size="17" font-weight="700" fill="#ecfdf5">Read</text>
+      <text y="98" fill="#8fb8a8">Tesseract OCR extracts the text</text>
+      <text y="116" fill="#8fb8a8">tuned preprocessing for usernames</text>
+    </g>
+
+    <!-- 4 Verify -->
+    <g transform="translate(890,100)">
+      <circle r="44" fill="url(#node)" stroke="#2f5646" stroke-width="1.5"/>
+      <path class="ic" d="M-14 1 L-4 11 L15 -10"/>
+      <circle cx="30" cy="-30" r="12" fill="#34d399"/>
+      <text x="30" y="-25.5" font-size="12" font-weight="800" fill="#052e21">4</text>
+      <text y="76" font-size="17" font-weight="700" fill="#ecfdf5">Verify</text>
+      <text y="98" fill="#8fb8a8">confirm or correct the text</text>
+      <text y="116" fill="#8fb8a8">keyboard shortcuts keep it fast</text>
+    </g>
+
+    <!-- 5 Export -->
+    <g transform="translate(1140,100)">
+      <circle r="44" fill="url(#node)" stroke="#2f5646" stroke-width="1.5"/>
+      <rect class="ic" x="-15" y="-15" width="30" height="30" rx="4"/>
+      <path class="ic" d="M-15 -5 H15 M-15 5 H15 M-5 -15 V15 M5 -15 V15"/>
+      <circle cx="30" cy="-30" r="12" fill="#34d399"/>
+      <text x="30" y="-25.5" font-size="12" font-weight="800" fill="#052e21">5</text>
+      <text y="76" font-size="17" font-weight="700" fill="#ecfdf5">Export</text>
+      <text y="98" fill="#8fb8a8">user × hashtag matrix</text>
+      <text y="116" fill="#8fb8a8">as a plain CSV file</text>
+    </g>
+  </g>
+</svg>
